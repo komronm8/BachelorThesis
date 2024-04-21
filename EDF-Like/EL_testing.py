@@ -5,15 +5,64 @@ import math
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 from numpy import arange
+import TimeDemandAnalysis
+
 
 numsets = 1
 seed = 0
 
 
 def main():
+    if testtype == 1:
+        edf()
+    elif testtype == 2:
+        tda()
+    else:
+        edf_cust()
+
+
+def tda():
     n = numtasks
     z = 0
-    print("Testing EDF-Like Algorithm with implizit deadlines. Number of task sets:", numsets,
+    print("Testing EDF-Like Algorithm with implicit deadlines. Number of task sets:", numsets,
+          "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
+    accRatios = []
+    utils = []
+    while z <= 100:
+        utilization = drs(n, z/100)
+        utils.append(z)
+        z += utilstep
+        numfail = 0
+        for x in range(numsets):
+            tasks = []
+            tdatasks = []
+            period = loguniform(n)
+            execution = [utilization[i] * period[i] for i in range(len(utilization))]
+            sumU = 0
+            for y in range(n):
+                tasks.append(
+                    {'period': period[y], 'execution': execution[y], 'deadline': period[y],
+                     'utilization': utilization[y], 'sslength': 0})
+                tdatasks.append([period[y], execution[y], period[y]])
+                sumU += utilization[y]
+            sortedtasks = sorted(tasks, key=lambda item: item['period'])
+            # print(tdatasks)
+            tdatasks.sort(key=lambda x: x[0])
+            # print(tdatasks)
+            if not EL.EL_fixed(sortedtasks, setprio=2):
+                numfail += 1
+            print(TimeDemandAnalysis.test(tdatasks))
+        accRatios.append(1 - (numfail / numsets))
+        print("Total utilization:", format(sumU, ".2f"), "=> Num of fails: ", numfail,
+              " Acceptance ratio: ", 1 - (numfail / numsets))
+    # plotgraph(accRatios, utils)
+    exit()
+
+
+def edf():
+    n = numtasks
+    z = 0
+    print("Testing EDF-Like Algorithm with implicit deadlines. Number of task sets:", numsets,
           "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
     accRatios = []
     utils = []
@@ -34,16 +83,55 @@ def main():
                      'utilization': utilization[y], 'sslength': 0})
                 sumU += utilization[y]
             sortedtasks = sorted(tasks, key=lambda item: item['period'])
+            for x in sortedtasks:
+                print("Period:", x['period'], "Execution:", x['execution'])
             if not EL.EL_fixed(sortedtasks, setprio=3):
                 numfail += 1
         accRatios.append(1 - (numfail / numsets))
         print("Total utilization:", format(sumU, ".2f"), "=> Num of fails: ", numfail,
               " Acceptance ratio: ", 1 - (numfail / numsets))
-    # print(accRatios)
-    # print(utils)
     plotgraph(accRatios, utils)
     exit()
 
+
+def edf_cust():
+    n = numtasks
+    z = 0
+    print("Testing EDF-Like Algorithm with custom tasks implicit deadlines. Number of task sets:", numsets,
+          "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
+    accRatios = []
+    utils = []
+    while z <= 100:
+        utilization = drs(n, z/100)
+        utilization.sort()
+        utils.append(z)
+        z += utilstep
+        numfail = 0
+        for x in range(numsets):
+            tasks = []
+            period = loguniform(n)
+            period.sort()
+            period[n-3] = 220
+            period[n-2] = 221
+            period[n-1] = 222
+            # period = [2, 4, 16, 256]
+            execution = [utilization[i] * period[i] for i in range(len(utilization))]
+            sumU = 0
+            for y in range(n):
+                tasks.append(
+                    {'period': period[y], 'execution': execution[y], 'deadline': period[y],
+                     'utilization': utilization[y], 'sslength': 0})
+                sumU += utilization[y]
+            sortedtasks = sorted(tasks, key=lambda item: item['period'])
+            for x in sortedtasks:
+                print("Period:", x['period'], "Execution:", x['execution'], "Util:", x['utilization'])
+            if not EL.EL_fixed(sortedtasks, setprio=3):
+                numfail += 1
+        accRatios.append(1 - (numfail / numsets))
+        print("Total utilization:", format(sumU, ".2f"), "=> Num of fails: ", numfail,
+              " Acceptance ratio: ", 1 - (numfail / numsets))
+    plotgraph(accRatios, utils)
+    exit()
 
 def plotgraph(a, u):
     plt.plot(u, a)
@@ -65,12 +153,14 @@ def loguniform(n, Tmin=1, Tmax=100, base=10) -> list[float]:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    parser.add_argument("-tt", "--testtype", dest="ttype", type=int, default=1, help="Choose the type of test to be used.")
     parser.add_argument("-ts", "--tasksets", dest="tsets", type=int, default=1, help="Specify the number of task sets.")
     parser.add_argument("-nt", "--numoftasks", dest="ntasks", type=int,default=10, help="Specify the number of tasks in a task set.")
     parser.add_argument("-us", "--utilstep", dest="ustep", type=float, default=10, help="Specify the utilization step.")
     parser.add_argument("-s", "--seed", dest="seed", type=int, default=200, help="Specify seed for random generation.")
     args = vars(parser.parse_args())
 
+    testtype = args["ttype"]
     numsets = args["tsets"]
     numtasks = args["ntasks"]
     utilstep = args["ustep"]
@@ -78,6 +168,8 @@ if __name__ == "__main__":
 
     random.seed(seed)
 
+    # Example of execution:
+    # python3 EL_testing.py -tt 2 -ts 20 -nt 5 -us 10
     main()
 
 

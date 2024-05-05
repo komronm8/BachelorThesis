@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 from numpy import arange
 import TimeDemandAnalysis
+import pda
 
 numsets = 1
 seed = 0
@@ -19,7 +20,11 @@ def main():
     elif testtype == 3:
         edf_dip()
     elif testtype == 4:
+        quantity_test()
+    elif testtype == 5:
         tda()
+    elif testtype == 6:
+        const_deadline()
 
 
 def edf():
@@ -33,7 +38,7 @@ def edf():
         utils.append(z)
         numfail = 0
         for x in range(numsets):
-            utilization = drs(n, z/100)
+            utilization = drs(n, z / 100)
             period = loguniform(n)
             numfail += schedule_tasks(utilization, period, 3)
         accRatios.append(1 - (numfail / numsets))
@@ -72,17 +77,18 @@ def edf_cust():
 def edf_dip():
     z = 0
     print("Testing EDF-Like Algorithm with implicit deadlines and dynamic priority(EDF). Number of task sets:", numsets,
-          "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep, "| Period step:", periodstep)
+          "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep, "| Period step:", periodstep,
+          "| Primary period:", primperiod)
     accRatios = []
     utils = []
     while z <= 100:
         utils.append(z)
         failset = [0, 0, 0, 0, 0, 0]
         for x in range(numsets):
-            utilization = drs(numtasks, z/100)
+            utilization = drs(numtasks, z / 100)
             # utilization.sort()
             for i in range(6):
-                period = [100, 100 + (i*periodstep)]
+                period = [primperiod, primperiod + (i * periodstep)]
                 failset[i] = failset[i] + schedule_tasks(utilization, period, 3)
         for f in range(len(failset)):
             failset[f] = 1 - (failset[f] / numsets)
@@ -109,7 +115,7 @@ def tda():
         numfail_tda = 0
         numfail_el_edf = 0
         for x in range(numsets):
-            utilization = drs(n, z/100)
+            utilization = drs(n, z / 100)
             tasks = []
             tdatasks = []
             period = loguniform(n)
@@ -134,10 +140,42 @@ def tda():
         accRatio_el_dm.append(1 - (numfail_el_dm / numsets))
         accRatio_el_edf.append(1 - (numfail_el_edf / numsets))
         print("Total utilization:", z, "=> Num of fails(EL): ", numfail_el_dm, " Acceptance ratio: ",
-              round(1 - (numfail_el_dm / numsets), 1), " Num of fails(TDA): ", numfail_tda, 1-(numfail_tda / numsets))
+              round(1 - (numfail_el_dm / numsets), 1), " Num of fails(TDA): ", numfail_tda, 1 - (numfail_tda / numsets))
         z += utilstep
 
     plotgraph([accRatio_el_dm, accRatio_tda, accRatio_el_edf], utils, False)
+    exit()
+
+
+def quantity_test():
+    n = numtasks
+    z = 0
+    print("Testing EDF-Like Algorithm with implicit deadlines and dynamic priority(EDF). Number of task sets:", numsets,
+          "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
+    accRatios = []
+    utils = []
+    period = []
+    print(period)
+    for i in range(n):
+        period.append(2 * (i + 1))
+    print(period)
+    while z <= 100:
+        utils.append(z)
+        numfail = 0
+        for x in range(numsets):
+            utilization = drs(n, z / 100)
+            numfail += schedule_tasks(utilization, period, 3)
+        accRatios.append(1 - (numfail / numsets))
+        print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
+        z += utilstep
+    plotgraph(accRatios, utils, False)
+    exit()
+
+
+def const_deadline():
+    tasks = [[10, 1, 5], [12, 3, 12], [30, 5, 20]]
+    result = pda.pda(tasks)
+    print(result)
     exit()
 
 
@@ -166,7 +204,8 @@ def plotgraph(a, u, mul):
             arr = []
             for i in range(len(a)):
                 arr.append(a[i][x])
-            plt.plot(u, arr, label=str(100 + x*periodstep) + " (" + str((x*periodstep*100)/100) + "%)")
+            plt.plot(u, arr,
+                     label=str(primperiod+(x*periodstep)) + " (" + str(round((x * periodstep * 100)/primperiod)) + "%)")
             plt.scatter(u, arr, marker=markers[x])
         plt.xlabel('Utilization (%)')
         plt.ylabel('Acceptance Ratio')
@@ -175,7 +214,7 @@ def plotgraph(a, u, mul):
         plt.xticks(arange(101, step=10))
         plt.show()
     else:
-        if len(a) > 1:
+        if testtype == 5:
             plt.plot(u, a[0])
             plt.scatter(u, a[0])
             plt.plot(u, a[1])
@@ -188,8 +227,8 @@ def plotgraph(a, u, mul):
             if numtasks >= 10:
                 plt.axvline(x=69.3147, color='r')
             else:
-                bound = numtasks * (pow(2, 1/numtasks) - 1)
-                plt.axvline(x=bound*100, color='r')
+                bound = numtasks * (pow(2, 1 / numtasks) - 1)
+                plt.axvline(x=bound * 100, color='r')
             if both:
                 plt.plot(u, a[2])
                 plt.scatter(u, a[2])
@@ -221,6 +260,8 @@ if __name__ == "__main__":
     parser.add_argument("-nt", "--numoftasks", dest="ntasks", type=int, default=10,
                         help="Specify the number of tasks in a task set.")
     parser.add_argument("-us", "--utilstep", dest="ustep", type=float, default=10, help="Specify the utilization step.")
+    parser.add_argument("-pp", "--primaryperiod", dest="pperiod", type=int, default=1,
+                        help="Specify the primary period to be used for the edf dip analysis")
     parser.add_argument("-ps", "--periodstep", dest="pstep", type=int, default=0,
                         help="Specify the period step for the dip analysis")
     parser.add_argument("-b", "--both", dest="both", type=int, default=False, help="Show both tests.")
@@ -231,17 +272,21 @@ if __name__ == "__main__":
     numsets = args["tsets"]
     numtasks = args["ntasks"]
     utilstep = args["ustep"]
+    primperiod = args["pperiod"]
     periodstep = args["pstep"]
     both = args["both"]
     seed = args["seed"]
 
     random.seed(seed)
 
+    if testtype == 3:
+        numtasks = 2
+
     # Example of execution in terminal:
     # python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10
 
     # For edf-dip, number of tasks should always be equal to 2
-    # Also the period step should be given: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -ps 80 -s 1
+    # Also the period step should be given: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -s 1
 
     # For TDA test the el algorithm with dynamic priority can also be included into the graph by using the arg --both
     # Like so: python3 EL_testing.py -tt 4 -ts 10 -nt 10 -us 5 -b 1 -s 5

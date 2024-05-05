@@ -6,12 +6,11 @@ import math
 # Each Row represents one Task
 # The columns hold the Tasks parameters
 # column 0 is period P,
-# column 1 is deadline D
-# column 2 is WCET C
+# column 1 is WCET C
+# column 2 is deadline D
 # P_i is accessed as: tasks[i][0]
-# D_i is accessed as: tasks[i][1]
-# C_i is accessed as: tasks[i][2]
-# The number of tasks can be accessed as: tasks.shape[0]
+# C_i is accessed as: tasks[i][1]
+# D_i is accessed as: tasks[i][2]
 
 # Workload function for task i in ordered tasks
 # Will return the Workload or -1 of not feasible
@@ -44,10 +43,6 @@ def calculate_workload(tasks, i, t):
 
 # The Time Demand Analysis Test
 def test(tasks):
-    # Sorting Taskset by Period/Deadline
-    # This makes implementing TDA a lot easier
-    # shape = tasks.shape
-    # sortedtasks = tasks[tasks[:, 0].argsort()]
 
     for x in range(len(tasks)):
         if not workload(tasks, x):

@@ -61,11 +61,15 @@ def edf_cust():
         for x in range(numsets):
             utilization = drs(n, z / 100)
             # utilization.sort()
-            period = [4, 7]
+            period = loguniform(n)
+            period.sort()
+            # period[n-3] = 220
+            # period[n-2] = 221
+            # period[n-1] = 222
             numfail += schedule_tasks(utilization, period, 3)
         accRatios.append(1 - (numfail / numsets))
-        print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
         z += utilstep
+        print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
     plotgraph(accRatios, utils, False)
     exit()
 
@@ -79,11 +83,11 @@ def edf_dip():
     utils = []
     while z <= 100:
         utils.append(z)
-        failset = [0] * variations
+        failset = [0, 0, 0, 0, 0, 0]
         for x in range(numsets):
             utilization = drs(numtasks, z / 100)
             # utilization.sort()
-            for i in range(variations):
+            for i in range(6):
                 period = [primperiod, primperiod + (i * periodstep)]
                 failset[i] = failset[i] + schedule_tasks(utilization, period, 3)
         for f in range(len(failset)):
@@ -136,8 +140,7 @@ def tda():
         accRatio_el_dm.append(1 - (numfail_el_dm / numsets))
         accRatio_el_edf.append(1 - (numfail_el_edf / numsets))
         print("Total utilization:", z, "=> Num of fails(EL): ", numfail_el_dm, " Acceptance ratio: ",
-              round(1 - (numfail_el_dm / numsets), 1), " Num of fails(TDA): ", numfail_tda,
-              " Acceptance ratio: ", 1 - (numfail_tda / numsets))
+              round(1 - (numfail_el_dm / numsets), 1), " Num of fails(TDA): ", numfail_tda, 1 - (numfail_tda / numsets))
         z += utilstep
 
     plotgraph([accRatio_el_dm, accRatio_tda, accRatio_el_edf], utils, False)
@@ -145,86 +148,49 @@ def tda():
 
 
 def quantity_test():
+    n = numtasks
     z = 0
     print("Testing EDF-Like Algorithm with implicit deadlines and dynamic priority(EDF). Number of task sets:", numsets,
           "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
     accRatios = []
     utils = []
+    period = []
+    print(period)
+    for i in range(n):
+        period.append(2 * (i + 1))
+    print(period)
     while z <= 100:
         utils.append(z)
-        failset = [0, 0, 0]
-        for i in range(3):
-            numfail = 0
-            n = numtasks + (i*numtaskstep)
-            for x in range(numsets):
-                utilization = drs(n, z / 100)
-                period = loguniform(n)
-                numfail += schedule_tasks(utilization, period, 3)
-            failset[i] = round(1 - (numfail / numsets), 2)
-        accRatios.append(failset)
-        print("Total utilization:", z, "=> Acceptance ratio: ", failset)
+        numfail = 0
+        for x in range(numsets):
+            utilization = drs(n, z / 100)
+            numfail += schedule_tasks(utilization, period, 3)
+        accRatios.append(1 - (numfail / numsets))
+        print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
         z += utilstep
-    plotgraph(accRatios, utils, True)
+    plotgraph(accRatios, utils, False)
     exit()
 
 
 def const_deadline():
-    # tasks = [[10, 3, 5], [12, 7, 12], [30, 8, 20]]
-    # result = pda.pda(tasks)
-    # print(result)
-
-    z = 0
-    print("Testing EDF-Like Algorithm with constraint deadlines and dynamic priority(EDF). Number of task sets:",
-          numsets, "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
-    accRatio_el_edf = []
-    accRatio_el_dm = []
-    accRatio_pda = []
-    utils = []
-    period = []
-    count = 0
-    for j in range(numtasks):
-        period.append(pow(2, j+1))
-    while z <= 100:
-        utils.append(z)
-        numfail_pda = 0
-        numfail_el_edf = 0
-        numfail_el_dm = 0
-        for x in range(numsets):
-            if z == 0:
-                utilization = drs(numtasks, 0.01 / 100)
-            else:
-                utilization = drs(numtasks, z / 100)
-            deadline = [i * ppercentage for i in period]
-            numfail_el_edf += schedule_tasks(utilization, period, 3, deadline)
-            numfail_el_dm += schedule_tasks(utilization, period, 2, deadline)
-            execution = [utilization[i] * period[i] for i in range(len(utilization))]
-            pdatasks = []
-            for m in range(len(utilization)):
-                pdatasks.append([period[m], execution[m], deadline[m]])
-            if not pda.pda(pdatasks):
-                numfail_pda += 1
-        count += 1
-        accRatio_el_edf.append(1 - (numfail_el_edf / numsets))
-        accRatio_el_dm.append(1 - (numfail_el_dm / numsets))
-        accRatio_pda.append(1 - (numfail_pda / numsets))
-        print("Total utilization:", z, "=> Num of fails: (EL-edf)", numfail_el_edf, "(EL-dm)", numfail_el_dm, "(PDA)",
-              numfail_pda, " Acceptance ratio: (EL-edf)", round((1 - (numfail_el_edf / numsets)), 2),
-              "(EL-dm)", round((1 - (numfail_el_dm / numsets)), 2), "(PDA)", round((1 - (numfail_pda / numsets)), 2))
-        z += utilstep
-    plotgraph([accRatio_el_edf, accRatio_el_dm, accRatio_pda], utils, False)
+    tasks = [[10, 1, 5], [12, 3, 12], [30, 5, 20]]
+    result = pda.pda(tasks)
+    print(result)
     exit()
 
 
-def schedule_tasks(utilization, period, prio, deadline=None):
-    if deadline is None:
-        deadline = period
+def schedule_tasks(utilization, period, prio):
     tasks = []
     execution = [utilization[i] * period[i] for i in range(len(utilization))]
-    for y in range(len(utilization)):
+    sumU = 0
+    for y in range(numtasks):
         tasks.append(
-            {'period': period[y], 'execution': execution[y], 'deadline': deadline[y],
+            {'period': period[y], 'execution': execution[y], 'deadline': period[y],
              'utilization': utilization[y], 'sslength': 0})
+        sumU += utilization[y]
     sortedtasks = sorted(tasks, key=lambda item: item['period'])
+    # for x in sortedtasks:
+    #     print("Period:", x['period'], "Execution:", x['execution'])
     if not EL.EL_fixed(sortedtasks, setprio=prio):
         return 1
     else:
@@ -233,23 +199,14 @@ def schedule_tasks(utilization, period, prio, deadline=None):
 
 def plotgraph(a, u, mul):
     if mul:
-        if testtype == 4:
-            for x in range(3):
-                arr = []
-                for i in range(len(a)):
-                    arr.append(a[i][x])
-                plt.plot(u, arr, label="Task #: " + str(numtasks+(x*numtaskstep)))
-                plt.scatter(u, arr)
-
-        # markers = ["o", ",", "v", "^", "<", ">"]
-        else:
-            for x in range(variations):
-                arr = []
-                for i in range(len(a)):
-                    arr.append(a[i][x])
-                plt.plot(u, arr,
-                         label=str(primperiod+(x*periodstep)) + " (" + str(round((x * periodstep * 100)/primperiod)) + "%)")
-                plt.scatter(u, arr)
+        markers = ["o", ",", "v", "^", "<", ">"]
+        for x in range(6):
+            arr = []
+            for i in range(len(a)):
+                arr.append(a[i][x])
+            plt.plot(u, arr,
+                     label=str(primperiod+(x*periodstep)) + " (" + str(round((x * periodstep * 100)/primperiod)) + "%)")
+            plt.scatter(u, arr, marker=markers[x])
         plt.xlabel('Utilization (%)')
         plt.ylabel('Acceptance Ratio')
         plt.legend(loc="lower left")
@@ -275,17 +232,6 @@ def plotgraph(a, u, mul):
             if both:
                 plt.plot(u, a[2])
                 plt.scatter(u, a[2])
-            plt.show()
-        elif testtype == 6:
-            names = ["EL-edf", "EL-dm", "PDA"]
-            for i in range(3):
-                plt.plot(u, a[i], label=names[i])
-                plt.scatter(u, a[i])
-            plt.xlabel('Utilization (%)')
-            plt.ylabel('Acceptance Ratio')
-            plt.yticks(arange(1.1, step=0.10))
-            plt.xticks(arange(101, step=10))
-            plt.legend(loc="lower left")
             plt.show()
         else:
             plt.plot(u, a)
@@ -318,12 +264,6 @@ if __name__ == "__main__":
                         help="Specify the primary period to be used for the edf dip analysis")
     parser.add_argument("-ps", "--periodstep", dest="pstep", type=int, default=0,
                         help="Specify the period step for the dip analysis")
-    parser.add_argument("-v", "--variations", dest="var", type=int, default=2,
-                        help="Specify the amount of plots to be created.")
-    parser.add_argument("-nts", "--numtaskstep", dest="ntstep", type=int, default=0,
-                        help="Specify the amount of change for the number of tasks per task set.")
-    parser.add_argument("-cd", "--constdead", dest="cdead", type=float, default=0.9,
-                        help="Specify the percentage of the periods to be used for constraint deadlines.")
     parser.add_argument("-b", "--both", dest="both", type=int, default=False, help="Show both tests.")
     parser.add_argument("-s", "--seed", dest="seed", type=int, default=200, help="Specify seed for random generation.")
     args = vars(parser.parse_args())
@@ -334,9 +274,6 @@ if __name__ == "__main__":
     utilstep = args["ustep"]
     primperiod = args["pperiod"]
     periodstep = args["pstep"]
-    variations = args["var"]
-    numtaskstep = args["ntstep"]
-    ppercentage = args["cdead"]
     both = args["both"]
     seed = args["seed"]
 

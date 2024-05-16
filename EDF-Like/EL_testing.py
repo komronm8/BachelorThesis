@@ -16,7 +16,7 @@ def main():
     if testtype == 1:
         edf()
     elif testtype == 2:
-        edf_cust()
+        edf_cust(100, 100)
     elif testtype == 3:
         edf_dip()
     elif testtype == 4:
@@ -25,6 +25,8 @@ def main():
         tda()
     elif testtype == 6:
         const_deadline()
+    elif testtype == 7:
+        multi_dip_test()
 
 
 def edf():
@@ -48,26 +50,22 @@ def edf():
     exit()
 
 
-def edf_cust():
-    n = numtasks
+def edf_cust(fperiod, speriod):
     z = 0
-    print("Testing EDF-Like Algorithm with implicit deadlines and dynamic priority(EDF). Number of task sets:", numsets,
-          "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
     accRatios = []
-    utils = []
+    # utils = []
     while z <= 100:
-        utils.append(z)
+        # utils.append(z)
         numfail = 0
         for x in range(numsets):
-            utilization = drs(n, z / 100)
-            # utilization.sort()
-            period = [4, 7]
+            utilization = drs(numtasks, z / 100)
+            period = [fperiod, speriod]
             numfail += schedule_tasks(utilization, period, 3)
         accRatios.append(1 - (numfail / numsets))
-        print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
+        # print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
         z += utilstep
-    plotgraph(accRatios, utils, False)
-    exit()
+    # plotgraph(accRatios, utils, False)
+    return accRatios
 
 
 def edf_dip():
@@ -215,6 +213,23 @@ def const_deadline():
     exit()
 
 
+def multi_dip_test():
+    m = 1
+    totalaccratio = []
+    a_points = []
+    a_slide = periodstep/primperiod
+    print(a_slide)
+    while m <= aparam:
+        result = edf_cust(primperiod, primperiod * m)
+        result = round(sum(result), 2)
+        totalaccratio.append(round(result / ((100/utilstep)+1), 3))
+        a_points.append(m)
+        m = round(m + a_slide, 3)
+    print(totalaccratio)
+    print(a_points)
+    plotgraph(totalaccratio, a_points, False)
+
+
 def schedule_tasks(utilization, period, prio, deadline=None):
     if deadline is None:
         deadline = period
@@ -238,7 +253,7 @@ def plotgraph(a, u, mul):
                 arr = []
                 for i in range(len(a)):
                     arr.append(a[i][x])
-                plt.plot(u, arr, label="Task #: " + str(numtasks+(x*numtaskstep)))
+                plt.plot(u, arr, label="Tasks #: " + str(numtasks+(x*numtaskstep)))
                 plt.scatter(u, arr)
 
         # markers = ["o", ",", "v", "^", "<", ">"]
@@ -277,15 +292,23 @@ def plotgraph(a, u, mul):
                 plt.scatter(u, a[2])
             plt.show()
         elif testtype == 6:
-            names = ["EL-edf", "EL-dm", "PDA"]
+            names = ["EL-EDF", "EL-DM", "PDA"]
             for i in range(3):
                 plt.plot(u, a[i], label=names[i])
                 plt.scatter(u, a[i])
+            plt.title("Constraint Deadline with " + str(ppercentage*100) + "%")
             plt.xlabel('Utilization (%)')
             plt.ylabel('Acceptance Ratio')
             plt.yticks(arange(1.1, step=0.10))
             plt.xticks(arange(101, step=10))
             plt.legend(loc="lower left")
+            plt.show()
+        elif testtype == 7:
+            plt.plot(u, a)
+            plt.scatter(u, a)
+            plt.xlabel('Change of \'a\'')
+            plt.ylabel('Total Acceptance Ratio')
+            plt.xticks(arange(1, aparam+1, 1))
             plt.show()
         else:
             plt.plot(u, a)
@@ -324,6 +347,8 @@ if __name__ == "__main__":
                         help="Specify the amount of change for the number of tasks per task set.")
     parser.add_argument("-cd", "--constdead", dest="cdead", type=float, default=0.9,
                         help="Specify the percentage of the periods to be used for constraint deadlines.")
+    parser.add_argument("-a", "--aparam", dest="a", type=int, default=2,
+                        help="Specify the a parameter for the multi-dip test.")
     parser.add_argument("-b", "--both", dest="both", type=int, default=False, help="Show both tests.")
     parser.add_argument("-s", "--seed", dest="seed", type=int, default=200, help="Specify seed for random generation.")
     args = vars(parser.parse_args())
@@ -337,12 +362,13 @@ if __name__ == "__main__":
     variations = args["var"]
     numtaskstep = args["ntstep"]
     ppercentage = args["cdead"]
+    aparam = args["a"]
     both = args["both"]
     seed = args["seed"]
 
     random.seed(seed)
 
-    if testtype == 3:
+    if testtype == 3 or testtype == 7:
         numtasks = 2
 
     # Example of execution in terminal:
@@ -352,6 +378,15 @@ if __name__ == "__main__":
     # Also the period step should be given: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -s 1
 
     # For TDA test the el algorithm with dynamic priority can also be included into the graph by using the arg --both
-    # Like so: python3 EL_testing.py -tt 4 -ts 10 -nt 10 -us 5 -b 1 -s 5
+    # Like so: python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -b 1 -s 5
+
+    # For quantity of tasks per task set test:
+    # python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -nts 10 -s 2
+
+    # For multi dip test(Number of tasks = 2):
+    # python3 EL_testing.py -tt 7 -ts 100 -nt 2 -us 5 -pp 100 -ps 20 -a 5 -s 2
+
+    # For constraint deadline test with PDA:
+    # EL_testing.py -tt 6 -ts 100 -nt 10 -us 5 -cd 0.6 -s 2
 
     main()

@@ -177,6 +177,7 @@ def const_deadline():
     accRatio_el_edf = []
     accRatio_el_dm = []
     accRatio_pda = []
+    accRatio_suf = []
     utils = []
     period = []
     count = 0
@@ -185,6 +186,7 @@ def const_deadline():
     while z <= 100:
         utils.append(z)
         numfail_pda = 0
+        numfail_suf = 0
         numfail_el_edf = 0
         numfail_el_dm = 0
         for x in range(numsets):
@@ -198,19 +200,38 @@ def const_deadline():
             execution = [utilization[i] * period[i] for i in range(len(utilization))]
             pdatasks = []
             for m in range(len(utilization)):
-                pdatasks.append([period[m], execution[m], deadline[m]])
+                pdatasks.append([period[m], execution[m], deadline[m], utilization[m]])
             if not pda.pda(pdatasks):
                 numfail_pda += 1
+            if not cd_suff_test(pdatasks):
+                numfail_suf += 1
         count += 1
         accRatio_el_edf.append(1 - (numfail_el_edf / numsets))
         accRatio_el_dm.append(1 - (numfail_el_dm / numsets))
         accRatio_pda.append(1 - (numfail_pda / numsets))
+        accRatio_suf.append(1 - (numfail_suf / numsets))
         print("Total utilization:", z, "=> Num of fails: (EL-edf)", numfail_el_edf, "(EL-dm)", numfail_el_dm, "(PDA)",
-              numfail_pda, " Acceptance ratio: (EL-edf)", round((1 - (numfail_el_edf / numsets)), 2),
-              "(EL-dm)", round((1 - (numfail_el_dm / numsets)), 2), "(PDA)", round((1 - (numfail_pda / numsets)), 2))
+              numfail_pda, "(Sufficient Test)", numfail_suf, "; Acceptance ratio: (EL-edf)",
+              round((1 - (numfail_el_edf / numsets)), 2), "(EL-dm)", round((1 - (numfail_el_dm / numsets)), 2), "(PDA)",
+              round((1 - (numfail_pda / numsets)), 2), "(Sufficient Test)", round((1 - (numfail_suf / numsets)), 2))
         z += utilstep
-    plotgraph([accRatio_el_edf, accRatio_el_dm, accRatio_pda], utils, False)
+    plotgraph([accRatio_el_edf, accRatio_el_dm, accRatio_pda, accRatio_suf], utils, False)
     exit()
+
+
+def cd_suff_test(tasks):
+    tasks.sort(key=lambda n: n[2])              # Sort task set by deadline
+    for k in range(len(tasks)):
+        sum_U = 0
+        sum_G = 0
+        for i in range(k):
+            task = tasks[i]
+            sum_U += task[3]
+            sum_G += (task[1]*(task[0]-task[2])) / task[0]
+        result = sum_U + ((1/tasks[k][2]) * sum_G)
+        if result > 1:
+            return False
+    return True
 
 
 def multi_dip_test():
@@ -263,7 +284,7 @@ def plotgraph(a, u, mul):
                 for i in range(len(a)):
                     arr.append(a[i][x])
                 plt.plot(u, arr,
-                         label=str(primperiod+(x*periodstep)) + " (" + str(round((x * periodstep * 100)/primperiod)) + "%)")
+                         label=str(primperiod+(x*periodstep))+" (" + str(round((x * periodstep * 100)/primperiod))+"%)")
                 plt.scatter(u, arr)
         plt.xlabel('Utilization (%)')
         plt.ylabel('Acceptance Ratio')
@@ -292,8 +313,8 @@ def plotgraph(a, u, mul):
                 plt.scatter(u, a[2])
             plt.show()
         elif testtype == 6:
-            names = ["EL-EDF", "EL-DM", "PDA"]
-            for i in range(3):
+            names = ["EL-EDF", "EL-DM", "PDA", "Sufficient Test"]
+            for i in range(4):
                 plt.plot(u, a[i], label=names[i])
                 plt.scatter(u, a[i])
             plt.title("Constraint Deadline with " + str(ppercentage*100) + "%")
@@ -375,7 +396,7 @@ if __name__ == "__main__":
     # python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10
 
     # For edf-dip, number of tasks should always be equal to 2
-    # Also the period step should be given: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -s 1
+    # Also the period step should be given: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -v 10 -s 1
 
     # For TDA test the el algorithm with dynamic priority can also be included into the graph by using the arg --both
     # Like so: python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -b 1 -s 5
@@ -387,6 +408,6 @@ if __name__ == "__main__":
     # python3 EL_testing.py -tt 7 -ts 100 -nt 2 -us 5 -pp 100 -ps 20 -a 5 -s 2
 
     # For constraint deadline test with PDA:
-    # EL_testing.py -tt 6 -ts 100 -nt 10 -us 5 -cd 0.6 -s 2
+    # python3 EL_testing.py -tt 6 -ts 100 -nt 10 -us 5 -cd 0.6 -s 2
 
     main()

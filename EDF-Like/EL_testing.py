@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from numpy import arange
 import TimeDemandAnalysis
 import pda
+import time
 
 numsets = 1
 seed = 0
@@ -53,18 +54,14 @@ def edf():
 def edf_cust(fperiod, speriod):
     z = 0
     accRatios = []
-    # utils = []
-    while z <= 100:
-        # utils.append(z)
+    while z < 100:
         numfail = 0
         for x in range(numsets):
             utilization = drs(numtasks, z / 100)
             period = [fperiod, speriod]
-            numfail += schedule_tasks(utilization, period, 3)
+            numfail += schedule_tasks(utilization, period, 2)
         accRatios.append(1 - (numfail / numsets))
-        # print("Total utilization:", z, "=> Num of fails: ", numfail, " Acceptance ratio: ", 1 - (numfail / numsets))
         z += utilstep
-    # plotgraph(accRatios, utils, False)
     return accRatios
 
 
@@ -148,29 +145,36 @@ def quantity_test():
           "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
     accRatios = []
     utils = []
+    totalaccratio = [0] * variations
+    taskamount = []
+    for j in range(variations):
+        taskamount.append(numtasks + (j * numtaskstep))
+
     while z <= 100:
         utils.append(z)
-        failset = [0, 0, 0]
-        for i in range(3):
+        failset = [0] * variations
+        for i in range(variations):
             numfail = 0
-            n = numtasks + (i*numtaskstep)
+            n = taskamount[i]
             for x in range(numsets):
                 utilization = drs(n, z / 100)
                 period = loguniform(n)
                 numfail += schedule_tasks(utilization, period, 3)
             failset[i] = round(1 - (numfail / numsets), 2)
+            totalaccratio[i] += failset[i]
         accRatios.append(failset)
         print("Total utilization:", z, "=> Acceptance ratio: ", failset)
         z += utilstep
-    plotgraph(accRatios, utils, True)
+
+    for i in range(len(totalaccratio)):
+        totalaccratio[i] = round(totalaccratio[i] / ((100 / utilstep) + 1), 3)
+
+    print(totalaccratio)
+    plotgraph([accRatios, totalaccratio], [utils, taskamount], True)
     exit()
 
 
 def const_deadline():
-    # tasks = [[10, 3, 5], [12, 7, 12], [30, 8, 20]]
-    # result = pda.pda(tasks)
-    # print(result)
-
     z = 0
     print("Testing EDF-Like Algorithm with constraint deadlines and dynamic priority(EDF). Number of task sets:",
           numsets, "| Number of tasks per set:", numtasks, "| Utilization step:", utilstep)
@@ -180,31 +184,54 @@ def const_deadline():
     accRatio_suf = []
     utils = []
     period = []
+    runtime_arr = []
     count = 0
+
     for j in range(numtasks):
-        period.append(pow(2, j+1))
+        period.append(pow(2, j + 1))
     while z <= 100:
         utils.append(z)
         numfail_pda = 0
         numfail_suf = 0
         numfail_el_edf = 0
         numfail_el_dm = 0
+        runtime_el_edf = runtime_el_dm = runtime_pda = runtime_suf = 0
+
         for x in range(numsets):
             if z == 0:
                 utilization = drs(numtasks, 0.01 / 100)
             else:
                 utilization = drs(numtasks, z / 100)
             deadline = [i * ppercentage for i in period]
+
+            start = time.time()
             numfail_el_edf += schedule_tasks(utilization, period, 3, deadline)
+            end = time.time()
+            runtime_el_edf += end - start
+
+            start = time.time()
             numfail_el_dm += schedule_tasks(utilization, period, 2, deadline)
+            end = time.time()
+            runtime_el_dm += end - start
+
             execution = [utilization[i] * period[i] for i in range(len(utilization))]
             pdatasks = []
+
             for m in range(len(utilization)):
                 pdatasks.append([period[m], execution[m], deadline[m], utilization[m]])
+
+            start = time.time()
             if not pda.pda(pdatasks):
                 numfail_pda += 1
+            end = time.time()
+            runtime_pda += end - start
+
+            start = time.time()
             if not cd_suff_test(pdatasks):
                 numfail_suf += 1
+            end = time.time()
+            runtime_suf += end - start
+
         count += 1
         accRatio_el_edf.append(1 - (numfail_el_edf / numsets))
         accRatio_el_dm.append(1 - (numfail_el_dm / numsets))
@@ -214,21 +241,25 @@ def const_deadline():
               numfail_pda, "(Sufficient Test)", numfail_suf, "; Acceptance ratio: (EL-edf)",
               round((1 - (numfail_el_edf / numsets)), 2), "(EL-dm)", round((1 - (numfail_el_dm / numsets)), 2), "(PDA)",
               round((1 - (numfail_pda / numsets)), 2), "(Sufficient Test)", round((1 - (numfail_suf / numsets)), 2))
+        print("Total utilization:", z, "=> Runtime: (EL-edf)", runtime_el_edf, "(EL-dm)", runtime_el_dm, "(PDA)",
+              runtime_pda, "(Sufficient Test)", runtime_suf)
+        runtime_arr.append([runtime_el_edf, runtime_el_dm, runtime_pda, runtime_suf])
         z += utilstep
     plotgraph([accRatio_el_edf, accRatio_el_dm, accRatio_pda, accRatio_suf], utils, False)
+    plotruntime(runtime_arr, utils)
     exit()
 
 
 def cd_suff_test(tasks):
-    tasks.sort(key=lambda n: n[2])              # Sort task set by deadline
+    tasks.sort(key=lambda n: n[2])  # Sort task set by deadline
     for k in range(len(tasks)):
         sum_U = 0
         sum_G = 0
-        for i in range(k):
+        for i in range(k + 1):
             task = tasks[i]
             sum_U += task[3]
-            sum_G += (task[1]*(task[0]-task[2])) / task[0]
-        result = sum_U + ((1/tasks[k][2]) * sum_G)
+            sum_G += (task[1] * (task[0] - task[2])) / task[0]
+        result = sum_U + ((1 / tasks[k][2]) * sum_G)
         if result > 1:
             return False
     return True
@@ -238,14 +269,18 @@ def multi_dip_test():
     m = 1
     totalaccratio = []
     a_points = []
-    a_slide = periodstep/primperiod
-    print(a_slide)
+    a_step = periodstep / primperiod
+    print("Testing multi-dip of EDF-Like with implicit deadline and dynamic priority(EDF)\nParameter 'a' step:", a_step,
+          "| Primary period for T_1:", primperiod, "| Number of task sets per 'a' parameter point:", numsets,
+          "| Number of tasks per task set:", numtasks, "| Utilization step:", utilstep)
     while m <= aparam:
         result = edf_cust(primperiod, primperiod * m)
         result = round(sum(result), 2)
-        totalaccratio.append(round(result / ((100/utilstep)+1), 3))
+        totalaccratio.append(round(result / (100 / utilstep), 3))
         a_points.append(m)
-        m = round(m + a_slide, 3)
+        print("Parameter 'a' in T_2 = a * T_1:", m, "=> Total overall Acceptance ratio for the given 'a':",
+              round(result / (100 / utilstep), 3))
+        m = round(m + a_step, 3)
     print(totalaccratio)
     print(a_points)
     plotgraph(totalaccratio, a_points, False)
@@ -267,16 +302,48 @@ def schedule_tasks(utilization, period, prio, deadline=None):
         return 0
 
 
+def plotruntime(runtime, u):
+    names = ["EL-EDF", "EL-DM", "PDA", "Sufficient Test"]
+    for x in range(4):
+        arr = []
+        for i in range(len(runtime)):
+            arr.append(runtime[i][x])
+        plt.plot(u, arr, label=names[x])
+        plt.scatter(u, arr)
+    plt.xlabel('Utilization (%)')
+    plt.ylabel('Runtime in seconds')
+    plt.title(str(numsets) + " Task Sets with " + str(numtasks) + " Tasks each")
+    plt.legend(loc="best")
+    # plt.yticks(arange(0.8, step=0.10))
+    plt.show()
+
+
 def plotgraph(a, u, mul):
     if mul:
         if testtype == 4:
-            for x in range(3):
+            accratios = a[0]
+            utils = u[0]
+            totalaccratios = a[1]
+            taskamount = u[1]
+            for x in range(variations):
                 arr = []
-                for i in range(len(a)):
-                    arr.append(a[i][x])
-                plt.plot(u, arr, label="Tasks #: " + str(numtasks+(x*numtaskstep)))
-                plt.scatter(u, arr)
-
+                for i in range(len(accratios)):
+                    arr.append(accratios[i][x])
+                plt.plot(utils, arr, label="Tasks #: " + str(numtasks + (x * numtaskstep)))
+                plt.scatter(utils, arr)
+            plt.xlabel('Utilization (%)')
+            plt.ylabel('Acceptance Ratio')
+            plt.legend(loc="lower left")
+            plt.yticks(arange(1.1, step=0.10))
+            plt.xticks(arange(101, step=10))
+            plt.show()
+            plt.plot(taskamount, totalaccratios)
+            plt.scatter(taskamount, totalaccratios)
+            plt.xlabel('Number of Tasks per Set')
+            plt.ylabel('Total Acceptance Ratio')
+            plt.yticks(arange(1.1, step=0.10))
+            plt.xticks(arange(numtasks, numtasks + (variations * numtaskstep), step=numtaskstep))
+            plt.show()
         # markers = ["o", ",", "v", "^", "<", ">"]
         else:
             for x in range(variations):
@@ -284,14 +351,15 @@ def plotgraph(a, u, mul):
                 for i in range(len(a)):
                     arr.append(a[i][x])
                 plt.plot(u, arr,
-                         label=str(primperiod+(x*periodstep))+" (" + str(round((x * periodstep * 100)/primperiod))+"%)")
+                         label=str(primperiod + (x * periodstep)) + " (" + str(
+                             round((x * periodstep * 100) / primperiod)) + "%)")
                 plt.scatter(u, arr)
-        plt.xlabel('Utilization (%)')
-        plt.ylabel('Acceptance Ratio')
-        plt.legend(loc="lower left")
-        plt.yticks(arange(1.1, step=0.10))
-        plt.xticks(arange(101, step=10))
-        plt.show()
+            plt.xlabel('Utilization (%)')
+            plt.ylabel('Acceptance Ratio')
+            plt.legend(loc="lower left")
+            plt.yticks(arange(1.1, step=0.10))
+            plt.xticks(arange(101, step=10))
+            plt.show()
     else:
         if testtype == 5:
             plt.plot(u, a[0])
@@ -317,7 +385,7 @@ def plotgraph(a, u, mul):
             for i in range(4):
                 plt.plot(u, a[i], label=names[i])
                 plt.scatter(u, a[i])
-            plt.title("Constraint Deadline with " + str(ppercentage*100) + "%")
+            plt.title("Constraint Deadline with " + str(ppercentage * 100) + "%")
             plt.xlabel('Utilization (%)')
             plt.ylabel('Acceptance Ratio')
             plt.yticks(arange(1.1, step=0.10))
@@ -325,11 +393,21 @@ def plotgraph(a, u, mul):
             plt.legend(loc="lower left")
             plt.show()
         elif testtype == 7:
-            plt.plot(u, a)
+            plt.plot(u, a, zorder=0)
             plt.scatter(u, a)
             plt.xlabel('Change of \'a\'')
             plt.ylabel('Total Acceptance Ratio')
-            plt.xticks(arange(1, aparam+1, 1))
+            if aparam == 2:
+                min_tar = 1
+                min_a_point = 0
+                for i in range(len(a)):
+                    if a[i] < min_tar:
+                        min_tar = a[i]
+                        min_a_point = u[i]
+                min_y = min(a)
+                plt.xticks(arange(1, 2.01, 0.05))
+                plt.yticks(arange(min_y, 1.01, 0.01))
+                plt.scatter(min_a_point, min_tar, color='red', zorder=1)
             plt.show()
         else:
             plt.plot(u, a)
@@ -360,7 +438,7 @@ if __name__ == "__main__":
     parser.add_argument("-us", "--utilstep", dest="ustep", type=float, default=10, help="Specify the utilization step.")
     parser.add_argument("-pp", "--primaryperiod", dest="pperiod", type=int, default=1,
                         help="Specify the primary period to be used for the edf dip analysis")
-    parser.add_argument("-ps", "--periodstep", dest="pstep", type=int, default=0,
+    parser.add_argument("-ps", "--periodstep", dest="pstep", type=float, default=0,
                         help="Specify the period step for the dip analysis")
     parser.add_argument("-v", "--variations", dest="var", type=int, default=2,
                         help="Specify the amount of plots to be created.")
@@ -369,7 +447,7 @@ if __name__ == "__main__":
     parser.add_argument("-cd", "--constdead", dest="cdead", type=float, default=0.9,
                         help="Specify the percentage of the periods to be used for constraint deadlines.")
     parser.add_argument("-a", "--aparam", dest="a", type=int, default=2,
-                        help="Specify the a parameter for the multi-dip test.")
+                        help="Specify the 'a' parameter for the multi-dip test.")
     parser.add_argument("-b", "--both", dest="both", type=int, default=False, help="Show both tests.")
     parser.add_argument("-s", "--seed", dest="seed", type=int, default=200, help="Specify seed for random generation.")
     args = vars(parser.parse_args())
@@ -402,7 +480,7 @@ if __name__ == "__main__":
     # Like so: python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -b 1 -s 5
 
     # For quantity of tasks per task set test:
-    # python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -nts 10 -s 2
+    # python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -v 3 -nts 10 -s 2
 
     # For multi dip test(Number of tasks = 2):
     # python3 EL_testing.py -tt 7 -ts 100 -nt 2 -us 5 -pp 100 -ps 20 -a 5 -s 2

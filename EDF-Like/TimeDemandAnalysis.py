@@ -36,8 +36,8 @@ def calculate_workload(tasks, i, t):
     sum = 0
     for k in range(i):
         C_k = tasks[k][1]
-        D_k = tasks[k][2]
-        sum = sum + (math.ceil(t / D_k) * C_k)
+        T_k = tasks[k][0]
+        sum = sum + (math.ceil(t / T_k) * C_k)
     return C_i + sum
 
 

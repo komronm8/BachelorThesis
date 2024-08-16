@@ -13,9 +13,10 @@ import math
 # D_i is accessed as: tasks[i][2]
 
 # Workload function for task i in ordered tasks
-# Will return the Workload or -1 of not feasible
+# Will return the Workload or -1 if not feasible
 
 
+# Function to determine if task i can meet its deadline based on workload analysis
 def workload(tasks, i):
     t = 0
     for x in range(i):
@@ -31,6 +32,7 @@ def workload(tasks, i):
     return False
 
 
+# Function to calculate the workload for task i at a given time t
 def calculate_workload(tasks, i, t):
     C_i = tasks[i][1]
     sum = 0
@@ -41,7 +43,7 @@ def calculate_workload(tasks, i, t):
     return C_i + sum
 
 
-# The Time Demand Analysis Test
+# Function to perform TDA on a list of tasks
 def test(tasks):
 
     for x in range(len(tasks)):

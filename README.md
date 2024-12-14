@@ -39,10 +39,26 @@ The individual tests can be run from the terminal by passing the corresponding a
 
 ### Available Tests
 **Utilization-based test, without TDA**
+This test gives out one plot
 
 Example with `python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10 -co 3 -s 0`:
+[![output-1.jpg](https://i.postimg.cc/0534nDb3/output-1.jpg)](https://postimg.cc/Rq7GV31Q)
 
-[![Screenshot-2024-12-12-at-09-23-45.png](https://i.postimg.cc/d3BLswkZ/Screenshot-2024-12-12-at-09-23-45.png)](https://postimg.cc/7J5xXvNq)
+**Period variation test (Util-based plotting)**
+
+Example with `python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -v 10 -co 3 -s 0`:
+[![output-1.jpg](https://i.postimg.cc/Z5ZzPpQm/output-1.jpg)](https://postimg.cc/9rxkCRVg)
+
+**Quantity of tasks per task set variation test**
+This test gives out two plots, the first one is the util-based plotting and the second one is the different approach(total acceptance ratio as a function of number of tasks per set)
+
+Example with `python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -v 4 -nts 10 -co 3 -s 0`:
+[![output-1.jpg](https://i.postimg.cc/Z5ZzPpQm/output-1.jpg)](https://postimg.cc/9rxkCRVg)
+
+[![output-2.jpg](https://i.postimg.cc/bYWznG8Y/output-2.jpg)](https://postimg.cc/ThjMM3pB)
+
+**Advanced Utilization-based test**
+
 
 ## Recreation of Conducted Tests from Thesis
 

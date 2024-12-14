@@ -42,7 +42,7 @@ The individual tests can be run from the terminal by passing the corresponding a
 
 Example with `python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10 -co 3 -s 0`:
 
-![Screenshot of a comment on a GitHub issue showing an image, added in the Markdown, of an Octocat smiling and raising a tentacle.](https://ibb.co/XL32d35)
+[![Screenshot-2024-12-12-at-09-23-45.png](https://i.postimg.cc/d3BLswkZ/Screenshot-2024-12-12-at-09-23-45.png)](https://postimg.cc/7J5xXvNq)
 
 ## Recreation of Conducted Tests from Thesis
 

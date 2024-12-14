@@ -255,7 +255,8 @@ def const_deadline():
         runtime_arr.append([runtime_el_edf, runtime_el_dm, runtime_pda, runtime_suf])
         z += utilstep
     plotgraph([accRatio_el_edf, accRatio_el_dm, accRatio_pda, accRatio_suf, accRatio_tda], utils, False)
-    #plotruntime(runtime_arr, utils)                        # Uncomment if runtime is needed
+    # Uncomment if runtime is needed:
+    #plotruntime(runtime_arr, utils)
     exit()
 
 
@@ -468,11 +469,11 @@ if __name__ == "__main__":
     parser.add_argument("-nts", "--numtaskstep", dest="ntstep", type=int, default=0,
                         help="Specify the amount of change for the number of tasks per task set.")
     parser.add_argument("-cd", "--constdead", dest="cdead", type=float, default=0.9,
-                        help="Specify the percentage of the periods to be used for constraint deadlines.")
+                        help="Specify the percentage of the periods to be used for constrained-deadline tasks.")
     parser.add_argument("-a", "--aparam", dest="a", type=int, default=2,
                         help="Specify the 'a' parameter for the multi-dip test.")
     parser.add_argument("-co", "--config", dest="config", type=int, default=3,
-                        help="Specifies which configuration EDF-Like should use, 2 for EL-DM and 3 for EL-EDF")
+                        help="Specifies which configuration of EDF-Like should be used, 2 for EL-DM and 3 for EL-EDF")
     parser.add_argument("-s", "--seed", dest="seed", type=int, default=200, help="Specify seed for random generation.")
     args = vars(parser.parse_args())
 

@@ -38,7 +38,7 @@ The individual tests can be run from the terminal by passing the corresponding a
 - s   - specifies the seed used for the random number generator
 
 ### Available Tests
-**Utilization-based test, without TDA**
+**Utilization-based test, without TDA**  
 This test gives out one plot
 
 Example with `python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10 -co 3 -s 0`:
@@ -57,8 +57,8 @@ Example with `python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -v 4 -nts 10 -co 3 
 
 [![output-2.jpg](https://i.postimg.cc/bYWznG8Y/output-2.jpg)](https://postimg.cc/ThjMM3pB)
 
-**Advanced Utilization-based test**
-
+**Advanced Utilization-based test**<br \>
+Example with python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -s 5
 
 ## Recreation of Conducted Tests from Thesis
 

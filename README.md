@@ -21,7 +21,7 @@ python3 -m pip install matplotlib numpy drs
 In case any dependent packages are missing, please install them accordingly.
 
 ## How to run the Tests
-The individual tests can be run from the terminal by passing the corresponding arguments. Also, it is important to know that not all arguments must be used for each test.
+The individual tests can be run by calling the El_testing.py file from the terminal and passing the corresponding arguments. Once the plot(s) are generated, they are saved as either outcome_1.jpg or outcome_2.jpg in the same file directory where El_testing.py is located. Also, it is important to know that not all arguments must be used for each test.
 
 ### Available Arguments
 - tt  - specifies the test that will be executed. Available options are numbers 1 to 7
@@ -35,30 +35,41 @@ The individual tests can be run from the terminal by passing the corresponding a
 - cd  - specifies the percentage that will be taken from the periods to create constrained-deadline task sets
 - a   - specifies the 'a' parameter introduced in the thesis (_T_2 = a *T_1_)
 - co  - specifies which configuration of EDF-Like should be used. Available options are 2 (EL-DM) and 3 (EL-EDF)
-- s   - specifies the seed used for the random number generator
+- s   - specifies the seed used for the random number generator  
 
 ### Available Tests
-**Utilization-based test, without TDA**  
-This test gives out one plot
+**Utilization-based test**  
+This test gives out a plot with one run with the specified EDF-Like configuration
 
 Example with `python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10 -co 3 -s 0`:
 [![output-1.jpg](https://i.postimg.cc/0534nDb3/output-1.jpg)](https://postimg.cc/Rq7GV31Q)
 
-**Period variation test (Util-based plotting)**
+**Advanced Utilization-based test**  
+This test gives out a plot with three runs (TDA, EL-DM, EL-EDF). Also as a benchmark, the Liu and Layland bound is shown.
+
+Example with `python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -s 0`:
+[![output-1.jpg](https://i.postimg.cc/vTZtdQ3D/output-1.jpg)](https://postimg.cc/KkCMPyXy)
+
+**Period variation test (util-based plotting)**  
+This test focuses on showing the effects on the schedulability when increasing the period of another task. Therefore there are only two tasks per task set. The outcome is a plot with _v_ runs, where with each subsequent run, the second task's period increases by the _ps_ value given. Both tasks at the first run have a period of the given _pp_ value.
 
 Example with `python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -v 10 -co 3 -s 0`:
 [![output-1.jpg](https://i.postimg.cc/Z5ZzPpQm/output-1.jpg)](https://postimg.cc/9rxkCRVg)
 
-**Quantity of tasks per task set variation test**
-This test gives out two plots, the first one is the util-based plotting and the second one is the different approach(total acceptance ratio as a function of number of tasks per set)
+**Period variation test (different approach)**
+This test is similar to the one above, the only difference being the way the resulting data will be plotted ()
+
+
+**Quantity of tasks per task set variation test**  
+This test focuses on showing the impact of changing the number of tasks per task set. The outcome is two plots, the first is the ordinary util-based plotting and the second is the different approach(total acceptance ratio as a function of the number of tasks per set).
 
 Example with `python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -v 4 -nts 10 -co 3 -s 0`:
 [![output-1.jpg](https://i.postimg.cc/Z5ZzPpQm/output-1.jpg)](https://postimg.cc/9rxkCRVg)
 
 [![output-2.jpg](https://i.postimg.cc/bYWznG8Y/output-2.jpg)](https://postimg.cc/ThjMM3pB)
 
-**Advanced Utilization-based test**<br \>
-Example with python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -s 5
+
+
 
 ## Recreation of Conducted Tests from Thesis
 

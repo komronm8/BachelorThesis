@@ -2,4 +2,6 @@
 .venv
 venv/
 EDF-Like/.idea
+EDF-Like/output_1.jpg
+EDF-Like/output_2.jpg
 *.DS_Store

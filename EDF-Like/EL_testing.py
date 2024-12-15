@@ -255,8 +255,7 @@ def const_deadline():
         runtime_arr.append([runtime_el_edf, runtime_el_dm, runtime_pda, runtime_suf])
         z += utilstep
     plotgraph([accRatio_el_edf, accRatio_el_dm, accRatio_pda, accRatio_suf, accRatio_tda], utils, False)
-    # Uncomment if runtime is needed:
-    #plotruntime(runtime_arr, utils)
+    plotruntime(runtime_arr, utils)
     exit()
 
 
@@ -329,6 +328,7 @@ def plotruntime(runtime, u):
     plt.title(str(numsets) + " Task Sets with " + str(numtasks) + " Tasks each")
     plt.legend(loc="best")
     # plt.yticks(arange(0.8, step=0.10))
+    plt.savefig("output_2.jpg")
     plt.show()
 
 
@@ -355,6 +355,7 @@ def plotgraph(a, u, mul):
             plt.legend(loc="lower left")
             plt.yticks(arange(1.1, step=0.10))
             plt.xticks(arange(101, step=10))
+            plt.savefig("output_1.jpg")
             plt.show()
 
             plt.plot(taskamount, totalaccratios)
@@ -363,6 +364,9 @@ def plotgraph(a, u, mul):
             plt.ylabel('Total Acceptance Ratio')
             plt.yticks(arange(1.1, step=0.10))
             plt.xticks(arange(numtasks, numtasks + (variations * numtaskstep), step=numtaskstep))
+            plt.savefig("output_2.jpg")
+            plt.show()
+            return
 
         else:
             for x in range(variations):
@@ -402,7 +406,7 @@ def plotgraph(a, u, mul):
             for i in range(5):
                 plt.plot(u, a[i], label=names[i])
                 plt.scatter(u, a[i])
-            plt.title("Constraint Deadline with " + str(ppercentage * 100) + "%")
+            plt.title("Constrained-Deadline with " + str(ppercentage * 100) + "%")
             plt.xlabel('Utilization (%)')
             plt.ylabel('Acceptance Ratio')
             plt.yticks(arange(1.1, step=0.10))
@@ -438,6 +442,7 @@ def plotgraph(a, u, mul):
             plt.yticks(arange(1.1, step=0.10))
             plt.xticks(arange(101, step=10))
 
+    plt.savefig("output_1.jpg")
     plt.show()
 
 
@@ -499,7 +504,7 @@ if __name__ == "__main__":
     # python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10 -co 3 -s 1
 
     # For edf-dip, number of tasks should always be equal to 2
-    # Like so: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -v 10 -co 2-s 1
+    # Like so: python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -v 10 -co 2 -s 1
 
     # For exact test with TDA:
     # Like so: python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -s 5

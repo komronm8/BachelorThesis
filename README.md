@@ -44,7 +44,7 @@ This test gives out a plot with one run with the specified EDF-Like configuratio
 Example with `python3 EL_testing.py -tt 1 -ts 20 -nt 5 -us 10 -co 3 -s 0`:
 [![output-1.jpg](https://i.postimg.cc/0534nDb3/output-1.jpg)](https://postimg.cc/Rq7GV31Q)
 
-**Advanced Utilization-based test**  
+**Advanced utilization-based test**  
 This test gives out a plot with three runs (TDA, EL-DM, EL-EDF). Also as a benchmark, the Liu and Layland bound is shown.
 
 Example with `python3 EL_testing.py -tt 5 -ts 10 -nt 10 -us 5 -s 0`:
@@ -56,9 +56,11 @@ This test focuses on showing the effects on the schedulability when increasing t
 Example with `python3 EL_testing.py -tt 3 -ts 10 -nt 2 -us 5 -pp 100 -ps 80 -v 10 -co 3 -s 0`:
 [![output-1.jpg](https://i.postimg.cc/Z5ZzPpQm/output-1.jpg)](https://postimg.cc/9rxkCRVg)
 
-**Period variation test (different approach)**
-This test is similar to the one above, the only difference being the way the resulting data will be plotted ()
+**Period variation test (different approach)**  
+This test is similar to the one above, the only difference being the way the resulting data will be plotted (the total acceptance ratio as a function of the parameter 'a' in T_2 = a * T_1)
 
+Example with `python3 EL_testing.py -tt 7 -ts 100 -nt 2 -us 5 -pp 100 -ps 20 -a 5 -co 3 -s 0`:
+[![output-1.jpg](https://i.postimg.cc/y8rhd9r7/output-1.jpg)](https://postimg.cc/HrX8vJgN)
 
 **Quantity of tasks per task set variation test**  
 This test focuses on showing the impact of changing the number of tasks per task set. The outcome is two plots, the first is the ordinary util-based plotting and the second is the different approach(total acceptance ratio as a function of the number of tasks per set).
@@ -68,11 +70,32 @@ Example with `python3 EL_testing.py -tt 4 -ts 20 -nt 5 -us 5 -v 4 -nts 10 -co 3 
 
 [![output-2.jpg](https://i.postimg.cc/bYWznG8Y/output-2.jpg)](https://postimg.cc/ThjMM3pB)
 
+**Test with constrained-deadline task sets**
+This test provides two plots, the first one as usual is based on the util-based test with 5 runs (El-EDF, EL_DM, PDA, TDA, Sufficient test for contained-deadline task sets) and the second plot is their runtime.
 
+Example with `python3 EL_testing.py -tt 6 -ts 100 -nt 10 -us 5 -cd 0.6 -s 1`:
+[![output-1.jpg](https://i.postimg.cc/8zn3S7R6/output-1.jpg)](https://postimg.cc/DSL5QyYv)
 
+[![output-2.jpg](https://i.postimg.cc/QM9zxjmn/output-2.jpg)](https://postimg.cc/yJKjL4wF)
 
-## Recreation of Conducted Tests from Thesis
+## Recreation of Conducted Tests from Thesis  
 
+### Section 4  
+**Figure 4.1**: `python3 EL_testing.py -tt 5 -ts 500 -nt 50 -us 2.5 -s 1`  
+**Figure 4.2**: `python3 EL_testing.py -tt 5 -ts 500 -nt [5,10,20] -us 2.5 -s 1`  
+**Figure 4.3**: `python3 EL_testing.py -tt 5 -ts 500 -nt 50 -us 2.5 -s 1` (Here the parameter 'Tmax' of the log-uniform distribution function was altered from the default 100, once to 10 and then to 1000)
+
+### Section 5  
+**Figure 5.1**: `python3 EL_testing.py -tt 4 -ts 100 -nt 1 -us 5 -v 10 -nts 1 -co 3 -s 1`  
+**Figure 5.2**: `python3 EL_testing.py -tt 4 -ts 100 -nt 1 -us 5 -v 10 -nts 1 -co 2 -s 1`  
+**Figure 5.3**: `python3 EL_testing.py -tt 4 -ts 100 -nt 10 -us 5 -v 6 -nts 40 -co 3 -s 1`  
+**Figure 5.4**: `python3 EL_testing.py -tt 4 -ts 100 -nt 10 -us 5 -v 6 -nts 40 -co 2 -s 1`
+
+### Section 6  
+**Figure 6.2**: `python3 EL_testing.py -tt 7 -ts 500 -nt 2 -us 5 -pp 100 -ps 10 -a 3 -co 3 -s 1`  
+**Figure 6.3**: `python3 EL_testing.py -tt 7 -ts 500 -nt 2 -us 5 -pp 100 -ps 10 -a 3 -co 2 -s 1`  
+**Figure 6.4**: `python3 EL_testing.py -tt 7 -ts 500 -nt 2 -us 5 -pp 100 -ps 25 -a 20 -co 3 -s 1`  
+**Figure 6.5**: `python3 EL_testing.py -tt 7 -ts 500 -nt 2 -us 5 -pp 100 -ps 25 -a 10 -co 2 -s 1`
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
